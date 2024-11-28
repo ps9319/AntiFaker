@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>이미지 업로드</title>
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+        rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Gothic+A1&family=Nanum+Myeongjo&family=Sour+Gummy:ital,wght@0,100..900;1,100..900&display=swap');
+
+    * {
+      font-family: "Gothic A1", sans-serif;
+      font-weight: 500;
+      font-style: normal;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #e6f0f7;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .top-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 15vh;
+      position: relative;
+      width: 100%;
+    }
+
+    .logo img {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 10px;
+    }
+
+    .divider {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100vw;
+      border-top: 7px solid #4c6ef5;
+    }
+
+    .bottom-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 65vh;
+      width: 100%;
+    }
+
+    .main-text {
+      font-size: 40px;
+      color: #333;
+      line-height: 1.5;
+      margin-bottom: 40px;
+    }
+
+    .range-word {
+      font-size: 20px;
+      color: #333;
+      line-height: 1.5;
+    }
+
+    .upload-btn {
+      background-color: #4c6ef5;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 30px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .upload-btn:hover {
+      background-color: #3b5bdb;
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-section">
+  <div class="logo">
+    <img src="antifaker-logo.png" alt="Anti Faker Logo">
+  </div>
+  <div class="divider"></div>
+</div>
+
+<div class="bottom-section">
+  <div class="content">
+    <div class="main-text">
+      이미지를 업로드하고<br>
+      딥페이크로부터<br>
+      안심하세요
+    </div>
+
+    <form id="uploadForm" enctype="multipart/form-data">
+      <input type="file" name="file" style="display: none;" id="fileInput" accept="image/*">
+      <input type="hidden" name="sliderValue" id="sliderValueInput"> <!-- 슬라이더 값 전송 -->
+      <button type="button" class="btn upload-btn"
+              onclick="document.getElementById('fileInput').click()">
+        이미지 업로드
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="range-word">
+  변환 강도 선택
+</div>
+
+<div class="wrapper-range">
+  <div class="sliderValue">
+    <span>50</span>
+  </div>
+  <div class="field">
+    <div class="value left">0</div>
+    <input type="range" class="form-range" min="0" max="100" value="50" steps="1" id="customRange2">
+    <div class="value right">100</div>
+  </div>
+</div>
+
+<style>
+  .wrapper-range {
+    height: 80px;
+    width: 380px;
+    background: #fff;
+    border-radius: 10px;
+    padding: 0 65px 0 45px;
+    box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .field {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    position: relative;
+  }
+
+  .field .value {
+    position: absolute;
+    font-size: 18px;
+    color: #045fa4;
+    font-weight: 600;
+  }
+
+  .field .value.left {
+    left: -22px;
+  }
+
+  .field .value.right {
+    right: -43px;
+  }
+
+  .field input {
+    flex: 1 1 auto;
+  }
+
+  .sliderValue {
+    position: relative;
+    width: 100%;
+  }
+
+  .sliderValue span {
+    position: absolute;
+    height: 45px;
+    width: 45px;
+    transform: translateX(-50%) scale(0); /* 가운데 정렬 */
+    font-weight: 500;
+    top: -60px; /* 슬라이더 바로 위에 위치 */
+    line-height: 45px;
+    z-index: 2;
+    background: url("/shield.png");
+    background-size: cover;
+    /*border-radius: 50%;*/
+    text-align: center;
+  }
+
+  .sliderValue span.show {
+    transform: translateX(-50%) scale(1);
+  }
+
+  .sliderValue span:after {
+    position: absolute;
+    content: '';
+    height: 100%;
+    width: 100%;
+    /*border: 3px solid #fff;*/
+    z-index: -1;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    border-bottom-left-radius: 50%;
+    box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.1);
+    border-top-left-radius: 50%;
+    border-top-right-radius: 50%;
+  }
+
+  .range input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: red;
+    border-radius: 50%;
+    background: #045fa4;
+    border: 1px solid #045fa4;
+    cursor: pointer;
+  }
+
+  .range input::-moz-range-progress {
+    background: #664AFF;
+  }
+
+  .slider-marks .mark {
+    position: absolute;
+    width: 15px; /* 크기 조정 */
+    height: 15px;
+    background-color: gray; /* 기본 회색 */
+    border-radius: 50%;
+    transform: translateX(-50%);
+    top: -10px; /* 슬라이더 바로 아래로 위치 조정 */
+  }
+
+  .slider-marks .mark.active {
+    background-color: #045fa4; /* 활성화 시 파란색 */
+    transform: translateX(-50%) scale(1.5); /* 크기 확대 */
+  }
+</style>
+
+<script>
+  // 슬라이더와 값 표시 요소 선택
+  const inputSlider = document.getElementById("customRange2");
+  const sliderValue = document.querySelector(".sliderValue span");
+
+  inputSlider.addEventListener("input", () => {
+    let value = inputSlider.value;
+
+    // 슬라이더 값 업데이트
+    sliderValue.textContent = value;
+
+    // 슬라이더 핸들 위치 계산 및 스타일 적용
+    let sliderWidth = inputSlider.offsetWidth;
+    let thumbOffset = inputSlider.offsetLeft;
+    let percentage = (value - inputSlider.min) / (inputSlider.max - inputSlider.min);
+    let leftPosition = thumbOffset + percentage * sliderWidth;
+
+    sliderValue.style.left = `calc(${percentage * 100}%)`; // 위치 조정
+    sliderValue.classList.add("show");
+  });
+
+  // 포커스를 벗어날 때 슬라이더 값 숨기기
+  inputSlider.addEventListener("blur", () => {
+    sliderValue.classList.remove("show");
+  });
+
+</script>
+
+<script>
+  document.getElementById('fileInput').addEventListener('change', async function (e) {
+    if (!e.target.files.length) {
+      return;
+    }
+
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('sliderValue', sliderValue.textContent); // 슬라이더 값을 FormData에 추가
+
+    // 로딩 스피너 표시
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    if (loadingSpinner) {
+      loadingSpinner.style.display = 'block';
+    }
+
+    try {
+      const response = await fetch('/send-image', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('서버 응답 에러');
+      }
+
+      // 성공시 complete 페이지로 리다이렉트
+      window.location.href = '/complete';
+
+    } catch (error) {
+      console.error('Error:', error);
+      alert('이미지 처리 중 오류가 발생했습니다.');
+    } finally {
+      // 로딩 스피너 숨기기
+      if (loadingSpinner) {
+        loadingSpinner.style.display = 'none';
+      }
+    }
+  });
+</script>
+
+</body>
+</html>

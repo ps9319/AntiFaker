@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>이미지 다운로드</title>
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+        rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Gothic+A1&family=Nanum+Myeongjo&family=Sour+Gummy:ital,wght@0,100..900;1,100..900&display=swap');
+
+    * {
+      font-family: "Gothic A1", sans-serif;
+      font-weight: 500;
+      font-style: normal;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #e6f0f7;
+      margin: 0;
+      text-align: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .top-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 15vh;
+      position: relative;
+      width: 100%;
+    }
+
+    .logo img {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .divider {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100vw;
+      border-top: 7px solid #4c6ef5;
+    }
+
+    .bottom-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 70vh;
+      width: 100%;
+    }
+
+    .main-text {
+      font-size: 40px;
+      color: #d53c3c;
+      line-height: 1.5;
+    }
+
+    .download-btn {
+      background-color: #4c6ef5;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 15px 30px;
+      font-size: 20px;
+      cursor: pointer;
+      text-decoration: none;
+      margin-top: 20px;
+    }
+
+    .download-btn:hover {
+      background-color: #3b5bdb;
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .preview-image {
+      max-width: 50%; /* 부모 컨테이너의 90% 너비 */
+      max-height: 300px; /* 최대 높이 제한 */
+      width: auto; /* 가로/세로 비율 유지 */
+      height: auto; /* 가로/세로 비율 유지 */
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      object-fit: contain; /* 이미지 비율을 유지하며 컨테이너에 맞춤 */
+    }
+
+    #imageContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: center; /* 좌우 중앙 정렬 */
+      justify-content: center; /* 상하 중앙 정렬 */
+    }
+
+    #downloadButton {
+      display: block;
+      margin: 10px auto; /* 버튼을 좌우 중앙으로 정렬 */
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="top-section">
+  <div class="logo" onclick="goToUploadPage()">
+    <img src="antifaker-logo.png" alt="Anti Faker Logo">
+  </div>
+  <div class="divider"></div>
+</div>
+
+<div class="bottom-section">
+  <div class="content">
+    <div class="main-text" id="statusMessage">
+      이미지가 변환되는 중입니다.<br> 잠시만 기다려 주세요...
+    </div>
+
+    <!-- 로딩 스피너 -->
+    <div id="loadingSpinner">
+      <div class="spinner-border text-primary" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+    </div>
+
+    <!-- 처리된 이미지 표시 -->
+    <div id="imageContainer">
+      <img id="processedImage" class="preview-image">
+      <button id="downloadButton" class="btn download-btn">다운로드</button>
+    </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', async function () {
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const imageContainer = document.getElementById('imageContainer');
+    const statusMessage = document.getElementById('statusMessage');
+    const processedImage = document.getElementById('processedImage');
+    const downloadButton = document.getElementById('downloadButton');
+
+    let retryCount = 0; // 요청 시도 횟수를 추적
+    const maxRetries = 5; // 최대 재시도 횟수 (20초 기준, 재요청 간격이 2초라면 10번)
+
+    async function checkForProcessedImage() {
+      try {
+        const response = await fetch('/processed-image');
+
+        if (response.ok) {
+          const base64Image = await response.text();
+
+          // 로딩 스피너 숨기기
+          loadingSpinner.style.display = 'none';
+
+          // 상태 메시지 업데이트
+          statusMessage.innerHTML = '보호 완료!!<br>변환된 이미지를<br>다운로드 받으세요';
+
+          // 처리된 이미지와 다운로드 버튼 표시
+          processedImage.src = base64Image;
+          imageContainer.style.display = 'block';
+          downloadButton.style.display = 'block';
+
+          downloadButton.addEventListener('click', function () {
+            const link = document.createElement('a');
+            link.href = processedImage.src;
+            link.download = 'processed_image.jpg';
+            link.click();
+          });
+        } else if (response.status === 404) {
+          retryCount++; // 재시도 횟수 증가
+          if (retryCount < maxRetries) {
+            // 이미지가 아직 준비되지 않음, 일정 시간 후 다시 시도
+            setTimeout(checkForProcessedImage, 2000); // 2초 후에 다시 시도
+          } else {
+            throw new Error('이미지가 처리되지 않았습니다. 다시 시도해 주세요.');
+          }
+        } else {
+          throw new Error('이미지를 가져오는 중 오류 발생');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        loadingSpinner.style.display = 'none';
+        statusMessage.innerHTML = '이미지 변환 실패<br>다시 시도해주세요';
+
+        // "다운로드" 버튼을 "다시 시도"로 변경
+        downloadButton.textContent = '다시 시도';
+        downloadButton.onclick = goToUploadPage; // 버튼 클릭 시 업로드 페이지로 이동
+      }
+    }
+
+    // 이미지 준비 상태 확인 시작
+    checkForProcessedImage();
+  });
+
+  function goToUploadPage() {
+    window.location.href = '/upload'; // '/upload'를 실제 업로드 페이지 URL로 변경
+  }
+</script>
+
+</body>
+</html>
