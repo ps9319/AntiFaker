@@ -86,7 +86,7 @@ public class ImageController {
 //        }
 //    }
 
-
+    @PostMapping("/send-image")
     public ResponseEntity<String> processImage(
         @RequestParam("file") MultipartFile file,
         HttpSession session,
