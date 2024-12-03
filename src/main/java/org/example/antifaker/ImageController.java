@@ -1,20 +1,30 @@
 package org.example.antifaker;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.util.Base64;
+import java.util.Map;
 import javax.imageio.ImageIO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.InternalException;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,12 +32,11 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 
 @Controller
+@Slf4j
 @RequiredArgsConstructor
 public class ImageController {
 
     private final RestClient restClient;
-    private final String pythonServerUrl = "localhost:8000/process_image";
-
 
     // GET /upload - 업로드 폼 페이지 표시
     @GetMapping("/upload")
@@ -95,34 +104,44 @@ public class ImageController {
         System.out.println(sliderValue);
         try {
             // MultipartBodyBuilder를 사용해 이미지와 슬라이더 값 함께 전송
-            MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
-            bodyBuilder.part("file", file.getResource(), MediaType.parseMediaType(file.getContentType()));
-            bodyBuilder.part("epsilon", sliderValue, MediaType.TEXT_PLAIN);
+            MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
+
+            // 파일 추가
+            parts.add("input_image", new ByteArrayResource(file.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return file.getOriginalFilename();
+                }
+            });
+            parts.add("epsilon", String.valueOf(sliderValue));
+
 
             ResponseEntity<String> result = restClient.post()
-                .uri(pythonServerUrl)
-                .body(bodyBuilder.build())
+                .uri("http://localhost:8000/process_image/")
+                .body(parts)
                 .retrieve()
+                .onStatus(httpStatusCode -> httpStatusCode.value() == 422, ((request, response) ->{
+                    throw new IllegalStateException("입력 이미지에서 얼굴을 인식하지 못했습니다.");
+                }))
                 .toEntity(String.class);
 
-            if (result.getStatusCode().value() == 422) {
-                throw new InternalException("입력 이미지에서 얼굴을 인식하지 못했습니다.");
-            }
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, String> responseMap = objectMapper.readValue(result.getBody(), Map.class);
 
-            String base64Result = result.getBody();
+            // "result" 필드 값 추출
+            String base64Result = responseMap.get("result");
 
-            // Base64 문자열을 byte 배열로 변환
-            byte[] imageBytes = Base64.getDecoder().decode(base64Result);
+            // Base64 문자열을 byte 배열로 변환 (안전한 변환 로직)
+            byte[] imageBytes = Base64.getDecoder().decode(base64Result.split(",")[base64Result.contains(",") ? 1 : 0]);
 
             // 세션에 저장
             session.setAttribute("processedImage", imageBytes);
 
             return ResponseEntity.ok(base64Result);
-
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("이미지 처리 중 예상치 못한 오류", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("이미지 처리 중 오류가 발생했습니다.");
+                .body(e.getMessage());
         }
     }
 
