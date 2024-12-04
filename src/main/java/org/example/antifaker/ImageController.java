@@ -2,25 +2,16 @@ package org.example.antifaker;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.util.Base64;
 import java.util.Map;
-import javax.imageio.ImageIO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.util.InternalException;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.LinkedMultiValueMap;
@@ -101,7 +92,6 @@ public class ImageController {
         HttpSession session,
         @RequestParam Integer sliderValue
     ) {
-        System.out.println(sliderValue);
         try {
             // MultipartBodyBuilder를 사용해 이미지와 슬라이더 값 함께 전송
             MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
@@ -115,12 +105,11 @@ public class ImageController {
             });
             parts.add("epsilon", String.valueOf(sliderValue));
 
-
             ResponseEntity<String> result = restClient.post()
-                .uri("http://localhost:8000/process_image/")
+                .uri("http://35.213.186.63:8000/process_image/")
                 .body(parts)
                 .retrieve()
-                .onStatus(httpStatusCode -> httpStatusCode.value() == 422, ((request, response) ->{
+                .onStatus(httpStatusCode -> httpStatusCode.value() == 422, ((request, response) -> {
                     throw new IllegalStateException("입력 이미지에서 얼굴을 인식하지 못했습니다.");
                 }))
                 .toEntity(String.class);
@@ -132,7 +121,8 @@ public class ImageController {
             String base64Result = responseMap.get("result");
 
             // Base64 문자열을 byte 배열로 변환 (안전한 변환 로직)
-            byte[] imageBytes = Base64.getDecoder().decode(base64Result.split(",")[base64Result.contains(",") ? 1 : 0]);
+            byte[] imageBytes = Base64.getDecoder()
+                .decode(base64Result.split(",")[base64Result.contains(",") ? 1 : 0]);
 
             // 세션에 저장
             session.setAttribute("processedImage", imageBytes);
@@ -183,7 +173,8 @@ public class ImageController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body("이미지가 아직 처리되지 않았습니다.");
         }
-        String base64Image = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(imageBytes);
+        String base64Image =
+            "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(imageBytes);
         return ResponseEntity.ok(base64Image);
     }
 
