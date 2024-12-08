@@ -106,7 +106,7 @@ public class ImageController {
             parts.add("epsilon", String.valueOf(sliderValue));
 
             ResponseEntity<String> result = restClient.post()
-                .uri("http://35.213.186.63:8000/process_image/")
+                .uri("http://localhost:8000/process_image/")
                 .body(parts)
                 .retrieve()
                 .onStatus(httpStatusCode -> httpStatusCode.value() == 422, ((request, response) -> {

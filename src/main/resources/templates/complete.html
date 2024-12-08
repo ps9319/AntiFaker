@@ -65,6 +65,24 @@
       line-height: 1.5;
     }
 
+    .preview-image {
+      max-width: 50%; /* 부모 컨테이너의 50% 너비 */
+      max-height: 300px; /* 최대 높이 제한 */
+      width: auto; /* 가로/세로 비율 유지 */
+      height: auto; /* 가로/세로 비율 유지 */
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      object-fit: contain; /* 이미지 비율을 유지하며 컨테이너에 맞춤 */
+    }
+
+    #imageContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
     .download-btn {
       background-color: #4c6ef5;
       color: #fff;
@@ -82,30 +100,6 @@
       color: #fff;
       text-decoration: none;
     }
-
-    .preview-image {
-      max-width: 50%; /* 부모 컨테이너의 90% 너비 */
-      max-height: 300px; /* 최대 높이 제한 */
-      width: auto; /* 가로/세로 비율 유지 */
-      height: auto; /* 가로/세로 비율 유지 */
-      margin: 20px 0;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      object-fit: contain; /* 이미지 비율을 유지하며 컨테이너에 맞춤 */
-    }
-
-    #imageContainer {
-      display: flex;
-      flex-direction: column;
-      align-items: center; /* 좌우 중앙 정렬 */
-      justify-content: center; /* 상하 중앙 정렬 */
-    }
-
-    #downloadButton {
-      display: block;
-      margin: 10px auto; /* 버튼을 좌우 중앙으로 정렬 */
-    }
-
   </style>
 </head>
 <body>
@@ -120,14 +114,7 @@
 <div class="bottom-section">
   <div class="content">
     <div class="main-text" id="statusMessage">
-      이미지가 변환되는 중입니다.<br> 잠시만 기다려 주세요...
-    </div>
-
-    <!-- 로딩 스피너 -->
-    <div id="loadingSpinner">
-      <div class="spinner-border text-primary" role="status">
-        <span class="sr-only">Loading...</span>
-      </div>
+      보호 완료!!<br>변환된 이미지를<br>다운로드 받으세요
     </div>
 
     <!-- 처리된 이미지 표시 -->
@@ -135,74 +122,41 @@
       <img id="processedImage" class="preview-image">
       <button id="downloadButton" class="btn download-btn">다운로드</button>
     </div>
-
-    </div>
   </div>
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', async function () {
-    const loadingSpinner = document.getElementById('loadingSpinner');
-    const imageContainer = document.getElementById('imageContainer');
-    const statusMessage = document.getElementById('statusMessage');
+  document.addEventListener('DOMContentLoaded', function () {
     const processedImage = document.getElementById('processedImage');
     const downloadButton = document.getElementById('downloadButton');
 
-    let retryCount = 0; // 요청 시도 횟수를 추적
-    const maxRetries = 5; // 최대 재시도 횟수 (20초 기준, 재요청 간격이 2초라면 10번)
-
-    async function checkForProcessedImage() {
-      try {
-        const response = await fetch('/processed-image');
-
-        if (response.ok) {
-          const base64Image = await response.text();
-
-          // 로딩 스피너 숨기기
-          loadingSpinner.style.display = 'none';
-
-          // 상태 메시지 업데이트
-          statusMessage.innerHTML = '보호 완료!!<br>변환된 이미지를<br>다운로드 받으세요';
-
-          // 처리된 이미지와 다운로드 버튼 표시
-          processedImage.src = base64Image;
-          imageContainer.style.display = 'block';
-          downloadButton.style.display = 'block';
-
-          downloadButton.addEventListener('click', function () {
-            const link = document.createElement('a');
-            link.href = processedImage.src;
-            link.download = 'processed_image.jpg';
-            link.click();
-          });
-        } else if (response.status === 404) {
-          retryCount++; // 재시도 횟수 증가
-          if (retryCount < maxRetries) {
-            // 이미지가 아직 준비되지 않음, 일정 시간 후 다시 시도
-            setTimeout(checkForProcessedImage, 2000); // 2초 후에 다시 시도
-          } else {
-            throw new Error('이미지가 처리되지 않았습니다. 다시 시도해 주세요.');
-          }
-        } else {
-          throw new Error('이미지를 가져오는 중 오류 발생');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        loadingSpinner.style.display = 'none';
-        statusMessage.innerHTML = '이미지 변환 실패<br>다시 시도해주세요';
-
-        // "다운로드" 버튼을 "다시 시도"로 변경
-        downloadButton.textContent = '다시 시도';
-        downloadButton.onclick = goToUploadPage; // 버튼 클릭 시 업로드 페이지로 이동
+    // 서버에서 처리된 이미지를 불러옴
+    fetch('/processed-image')
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      } else {
+        throw new Error('이미지 로드 실패');
       }
-    }
-
-    // 이미지 준비 상태 확인 시작
-    checkForProcessedImage();
+    })
+    .then(base64Image => {
+      // 이미지와 다운로드 버튼 표시
+      processedImage.src = base64Image;
+      downloadButton.addEventListener('click', function () {
+        const link = document.createElement('a');
+        link.href = processedImage.src;
+        link.download = 'processed_image.jpg';
+        link.click();
+      });
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      document.getElementById('statusMessage').innerHTML = '이미지 로드 실패<br>다시 시도해주세요';
+    });
   });
 
   function goToUploadPage() {
-    window.location.href = '/upload'; // '/upload'를 실제 업로드 페이지 URL로 변경
+    window.location.href = '/upload'; // 업로드 페이지로 이동
   }
 </script>
 

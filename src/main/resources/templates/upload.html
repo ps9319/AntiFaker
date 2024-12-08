@@ -113,6 +113,15 @@
         이미지 업로드
       </button>
     </form>
+
+    <!-- 로딩 스피너 (처음에는 숨김 상태) -->
+    <div id="loadingSpinner" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background-color: rgba(255, 255, 255, 0.8); padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);">
+      <div class="spinner-border text-primary" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+      <p>이미지를 처리 중입니다. 잠시만 기다려 주세요...</p>
+    </div>
+
   </div>
 </div>
 
@@ -264,9 +273,6 @@
     sliderValue.classList.remove("show");
   });
 
-</script>
-
-<script>
   document.getElementById('fileInput').addEventListener('change', async function (e) {
     if (!e.target.files.length) {
       return;
@@ -286,7 +292,7 @@
     try {
       const response = await fetch('/send-image', {
         method: 'POST',
-        body: formData
+        body: formData,
       });
 
       if (!response.ok) {
@@ -294,12 +300,12 @@
         throw new Error(errorText);
       }
 
-      // 성공시 complete 페이지로 리다이렉트
+      // 성공 시 완료 페이지로 리다이렉트
       window.location.href = '/complete';
 
     } catch (error) {
-      console.error(error);
-      alert(error.message);
+      console.error('Error:', error);
+      alert('이미지 처리 중 오류가 발생했습니다.');
     } finally {
       // 로딩 스피너 숨기기
       if (loadingSpinner) {
@@ -307,6 +313,9 @@
       }
     }
   });
+
+
+
 </script>
 
 </body>
